@@ -2,81 +2,108 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
-import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, Loader2, Check } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { PageTransition } from '@/components/neo/PageTransition';
+import { motion } from 'framer-motion';
+import { Package, Search, Clock, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { NeoDisc } from '@/components/neo/NeoDisc';
 
 export default function Encomendas() {
-  const [filter, setFilter] = useState('todos');
-  const { toast } = useToast();
-  const qc = useQueryClient();
+  const [search, setSearch] = useState('');
 
-  const { data: encomendas = [], isLoading } = useQuery({
+  const { data: encomendas, isLoading } = useQuery({
     queryKey: ['encomendas'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('encomendas')
         .select('*, moradores(nome, apartamento, bloco)')
         .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      return data ?? [];
     },
-    refetchInterval: 30000,
   });
 
-  const retirar = useMutation({
-    mutationFn: async (id: number) => {
-      const { error } = await supabase.from('encomendas').update({ status: 'retirada', data_retirada: new Date().toISOString() }).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['encomendas'] }); toast({ title: 'Encomenda retirada!' }); },
-  });
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pendente': return <Clock size={16} className="text-amber-500" />;
+      case 'notificado': return <AlertCircle size={16} className="text-blue-500" />;
+      case 'retirado': return <CheckCircle2 size={16} className="text-green-500" />;
+      default: return null;
+    }
+  };
 
-  const filtered = filter === 'todos' ? encomendas : encomendas.filter(e => e.status === filter);
+  const filtered = encomendas?.filter(e =>
+    !search || e.descricao?.toLowerCase().includes(search.toLowerCase()) ||
+    (e.moradores as any)?.nome?.toLowerCase().includes(search.toLowerCase()) ||
+    (e.moradores as any)?.apartamento?.includes(search)
+  );
 
   return (
     <AppLayout>
-      <PageHeader title="Encomendas" description={`${encomendas.length} registradas`} icon={<Package className="h-5 w-5" />} />
-
-      <div className="flex gap-2 mb-4">
-        {['todos', 'pendente', 'retirada'].map(s => (
-          <Button key={s} size="sm" variant={filter === s ? 'default' : 'outline'} onClick={() => setFilter(s)} className="capitalize text-xs">
-            {s}
-          </Button>
-        ))}
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-      ) : (
-        <div className="grid gap-3">
-          {filtered.map(e => (
-            <div key={e.id} className="glass-card p-4 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">{e.descricao}</p>
-                <p className="text-sm text-muted-foreground">
-                  {e.moradores ? `${(e.moradores as any).nome} — Apt ${(e.moradores as any).apartamento}` : 'Morador não encontrado'}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">{new Date(e.data_recebimento).toLocaleDateString('pt-BR')}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs px-2 py-1 rounded-full ${e.status === 'pendente' ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
-                  {e.status}
-                </span>
-                {e.status === 'pendente' && (
-                  <Button size="sm" variant="outline" onClick={() => retirar.mutate(e.id)}>
-                    <Check className="h-3 w-3 mr-1" /> Retirar
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma encomenda.</p>}
+      <PageTransition className="space-y-10 max-w-5xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <h1 className="text-4xl font-bold text-primary tracking-tight mb-2">Encomendas</h1>
+            <p className="text-muted-foreground text-sm">Gestão de pacotes e correspondências.</p>
+          </div>
+          <div className="neo-inset rounded-full flex items-center px-4 py-2 w-full md:w-80">
+            <Search size={18} className="text-muted-foreground mr-3" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar apto, nome..."
+              className="bg-transparent border-none outline-none text-sm w-full text-foreground placeholder:text-muted-foreground" />
+          </div>
         </div>
-      )}
+
+        {isLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        ) : (
+          <motion.div
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
+            initial="hidden" animate="visible"
+            className="space-y-6"
+          >
+            {filtered?.map((pkg) => (
+              <motion.div key={pkg.id}
+                variants={{ hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0 } }}
+                className="flex items-center gap-6 md:gap-12"
+              >
+                <NeoDisc size="sm" inset className="z-10 shrink-0 hidden md:flex bg-background">
+                  <Package size={16} className="text-primary" />
+                </NeoDisc>
+                <div className="flex-1">
+                  <div className="neo-raised rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-transform hover:scale-[1.01] duration-300">
+                    <div className="flex items-center gap-4">
+                      <div className="neo-inset w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                        <span className="font-bold text-primary text-sm">{(pkg.moradores as any)?.apartamento ?? '—'}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-primary">{(pkg.moradores as any)?.nome ?? 'Morador'}</h4>
+                        <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="font-mono text-xs">#{pkg.id}</span>
+                          <span>•</span>
+                          <span>{pkg.descricao}</span>
+                          <span>•</span>
+                          <span>{pkg.tipo}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium neo-inset-sm",
+                      pkg.status === 'pendente' ? "text-amber-600" :
+                      pkg.status === 'notificado' ? "text-blue-600" : "text-green-600"
+                    )}>
+                      {getStatusIcon(pkg.status)}
+                      {pkg.status}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+            {filtered?.length === 0 && (
+              <div className="neo-inset rounded-3xl p-12 text-center text-muted-foreground">Nenhuma encomenda encontrada.</div>
+            )}
+          </motion.div>
+        )}
+      </PageTransition>
     </AppLayout>
   );
 }
