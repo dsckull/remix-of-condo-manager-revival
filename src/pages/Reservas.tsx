@@ -1,111 +1,125 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
-import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { BookOpen, Plus, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { PageTransition } from '@/components/neo/PageTransition';
+import { motion } from 'framer-motion';
+import { CalendarDays, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+
+const dayLabels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+function getMonday(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 
 export default function Reservas() {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ area_id: '', morador_id: '', data_reserva: '', hora_inicio: '08:00', hora_fim: '12:00' });
-  const { toast } = useToast();
-  const qc = useQueryClient();
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  const { data: reservas = [], isLoading } = useQuery({
+  const monday = getMonday(new Date());
+  monday.setDate(monday.getDate() + weekOffset * 7);
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+
+  const { data: reservas, isLoading } = useQuery({
     queryKey: ['reservas'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('reservas').select('*, areas_comuns(nome), moradores(nome, apartamento)').order('data_reserva', { ascending: false });
-      if (error) throw error;
-      return data;
+      const { data } = await supabase.from('reservas').select('*, areas_comuns(nome), moradores(nome, apartamento)').order('data_reserva');
+      return data ?? [];
     },
   });
 
-  const { data: areas = [] } = useQuery({
+  const { data: areas } = useQuery({
     queryKey: ['areas_comuns'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('areas_comuns').select('*').eq('disponivel', true);
-      if (error) throw error;
-      return data;
+      const { data } = await supabase.from('areas_comuns').select('*');
+      return data ?? [];
     },
   });
 
-  const { data: moradores = [] } = useQuery({
-    queryKey: ['moradores-select'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('moradores').select('id, nome, apartamento').eq('status', 'ativo');
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const create = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from('reservas').insert({
-        area_id: parseInt(form.area_id),
-        morador_id: parseInt(form.morador_id),
-        data_reserva: form.data_reserva,
-        hora_inicio: form.hora_inicio,
-        hora_fim: form.hora_fim,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['reservas'] }); setOpen(false); toast({ title: 'Reserva criada!' }); },
-    onError: (e: Error) => toast({ title: 'Erro', description: e.message, variant: 'destructive' }),
-  });
+  const areaNames = areas?.map(a => a.nome) ?? ["Academia", "Salão de Festas", "Churrasqueira", "Piscina"];
 
   return (
     <AppLayout>
-      <PageHeader
-        title="Reservas"
-        description={`${reservas.length} reservas`}
-        icon={<BookOpen className="h-5 w-5" />}
-        action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Reservar</Button></DialogTrigger>
-            <DialogContent className="bg-card border-border">
-              <DialogHeader><DialogTitle className="font-heading">Nova Reserva</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <select value={form.area_id} onChange={e => setForm({ ...form, area_id: e.target.value })} className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground">
-                  <option value="">Selecione a área</option>
-                  {areas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
-                </select>
-                <select value={form.morador_id} onChange={e => setForm({ ...form, morador_id: e.target.value })} className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground">
-                  <option value="">Selecione o morador</option>
-                  {moradores.map(m => <option key={m.id} value={m.id}>{m.nome} — Apt {m.apartamento}</option>)}
-                </select>
-                <Input type="date" value={form.data_reserva} onChange={e => setForm({ ...form, data_reserva: e.target.value })} className="bg-secondary" />
-                <div className="grid grid-cols-2 gap-3">
-                  <Input type="time" value={form.hora_inicio} onChange={e => setForm({ ...form, hora_inicio: e.target.value })} className="bg-secondary" />
-                  <Input type="time" value={form.hora_fim} onChange={e => setForm({ ...form, hora_fim: e.target.value })} className="bg-secondary" />
-                </div>
-                <Button onClick={() => create.mutate()} className="w-full" disabled={!form.area_id || !form.morador_id || !form.data_reserva}>Reservar</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        }
-      />
-
-      {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-      ) : (
-        <div className="grid gap-3">
-          {reservas.map(r => (
-            <div key={r.id} className="glass-card p-4 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">{(r.areas_comuns as any)?.nome ?? 'Área'}</p>
-                <p className="text-sm text-muted-foreground">{(r.moradores as any)?.nome} — Apt {(r.moradores as any)?.apartamento}</p>
-                <p className="text-xs text-muted-foreground">{r.data_reserva} • {r.hora_inicio} — {r.hora_fim}</p>
-              </div>
-              <span className={`text-xs px-2 py-1 rounded-full ${r.status === 'confirmada' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>{r.status}</span>
-            </div>
-          ))}
-          {reservas.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma reserva.</p>}
+      <PageTransition className="space-y-10 max-w-7xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <h1 className="text-4xl font-bold text-primary tracking-tight mb-2">Reservas</h1>
+            <p className="text-muted-foreground text-sm">Disponibilidade de áreas comuns.</p>
+          </div>
+          <div className="flex items-center gap-4 bg-card p-2 rounded-full neo-raised">
+            <button onClick={() => setWeekOffset(w => w - 1)} className="p-2 hover:bg-background rounded-full text-muted-foreground hover:text-primary transition-colors">
+              <ChevronLeft size={20} />
+            </button>
+            <span className="font-semibold text-primary px-4 min-w-[200px] text-center capitalize">
+              {monday.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            </span>
+            <button onClick={() => setWeekOffset(w => w + 1)} className="p-2 hover:bg-background rounded-full text-muted-foreground hover:text-primary transition-colors">
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
-      )}
+
+        {isLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        ) : (
+          <div className="neo-inset rounded-3xl p-6 md:p-8 overflow-x-auto">
+            <div className="min-w-[800px]">
+              <div className="grid grid-cols-8 gap-4 mb-6">
+                <div className="col-span-1"></div>
+                {weekDays.map((d, i) => (
+                  <div key={i} className="text-center font-bold text-primary pb-4 border-b border-border">
+                    <div className="text-sm text-muted-foreground font-normal mb-1">{dayLabels[i]}</div>
+                    <div className="text-xl">{d.getDate()}</div>
+                  </div>
+                ))}
+              </div>
+
+              <motion.div
+                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+                initial="hidden" animate="visible"
+                className="space-y-6"
+              >
+                {areaNames.map((area) => (
+                  <motion.div key={area}
+                    variants={{ hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0 } }}
+                    className="grid grid-cols-8 gap-4 items-center"
+                  >
+                    <div className="col-span-1 text-sm font-semibold text-primary pr-4 flex items-center gap-2">
+                      <CalendarDays size={16} className="text-muted-foreground" />
+                      {area}
+                    </div>
+                    {weekDays.map((wd, dIdx) => {
+                      const dayDate = wd.toISOString().split('T')[0];
+                      const res = reservas?.find(r => (r.areas_comuns as any)?.nome === area && r.data_reserva === dayDate);
+                      return (
+                        <div key={dIdx} className="h-24">
+                          {res ? (
+                            <div className="w-full h-full neo-inset-sm bg-background/50 rounded-xl p-3 flex flex-col justify-between border border-border/40">
+                              <span className="text-xs font-bold text-primary">Apt {(res.moradores as any)?.apartamento}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{res.hora_inicio}–{res.hora_fim}</span>
+                            </div>
+                          ) : (
+                            <div className="w-full h-full neo-raised bg-card rounded-xl p-3 flex items-center justify-center text-muted-foreground/30">
+                              <span className="text-xs">—</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </div>
+        )}
+      </PageTransition>
     </AppLayout>
   );
 }

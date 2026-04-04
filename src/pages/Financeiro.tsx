@@ -1,103 +1,90 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
-import { PageHeader } from '@/components/PageHeader';
-import { StatCard } from '@/components/StatCard';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { DollarSign, Plus, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { PageTransition } from '@/components/neo/PageTransition';
+import { KpiCard } from '@/components/neo/KpiCard';
+import { ConcentricRings } from '@/components/neo/ConcentricRings';
+import { motion } from 'framer-motion';
+import { Wallet, TrendingDown, AlertTriangle, PiggyBank, Loader2 } from 'lucide-react';
 
 export default function Financeiro() {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ descricao: '', valor: '', tipo: 'receita', categoria: 'condominio' });
-  const { toast } = useToast();
-  const qc = useQueryClient();
-
-  const { data: lancamentos = [], isLoading } = useQuery({
+  const { data: lancamentos, isLoading } = useQuery({
     queryKey: ['financeiro'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('financeiro').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      const { data } = await supabase.from('financeiro').select('*').order('created_at', { ascending: false });
+      return data ?? [];
     },
-    refetchInterval: 30000,
   });
 
-  const create = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from('financeiro').insert({ ...form, valor: parseFloat(form.valor) });
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['financeiro'] }); setOpen(false); toast({ title: 'Lançamento criado!' }); },
-    onError: (e: Error) => toast({ title: 'Erro', description: e.message, variant: 'destructive' }),
-  });
-
-  const receitas = lancamentos.filter(l => l.tipo === 'receita').reduce((s, l) => s + Number(l.valor), 0);
-  const despesas = lancamentos.filter(l => l.tipo === 'despesa').reduce((s, l) => s + Number(l.valor), 0);
+  const receitas = lancamentos?.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0) ?? 0;
+  const despesas = lancamentos?.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0) ?? 0;
+  const inadimplentes = lancamentos?.filter(l => l.status === 'pendente' && l.tipo === 'receita').length ?? 0;
   const saldo = receitas - despesas;
 
-  const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const ringData = [
+    { name: "Saldo", value: Math.min(100, Math.round((saldo / (receitas || 1)) * 100)), fill: "hsl(var(--chart-4))" },
+    { name: "Inadimplência", value: Math.min(100, inadimplentes * 10), fill: "hsl(var(--destructive))" },
+    { name: "Despesas", value: Math.min(100, Math.round((despesas / (receitas || 1)) * 100)), fill: "hsl(var(--chart-2))" },
+    { name: "Receitas", value: 95, fill: "hsl(var(--chart-1))" },
+  ];
 
   return (
     <AppLayout>
-      <PageHeader
-        title="Financeiro"
-        description="Gestão financeira do condomínio"
-        icon={<DollarSign className="h-5 w-5" />}
-        action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Lançamento</Button></DialogTrigger>
-            <DialogContent className="bg-card border-border">
-              <DialogHeader><DialogTitle className="font-heading">Novo Lançamento</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <Input placeholder="Descrição" value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="bg-secondary" />
-                <Input placeholder="Valor" type="number" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} className="bg-secondary" />
-                <div className="grid grid-cols-2 gap-3">
-                  <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground">
-                    <option value="receita">Receita</option>
-                    <option value="despesa">Despesa</option>
-                  </select>
-                  <select value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground">
-                    <option value="condominio">Condomínio</option>
-                    <option value="manutencao">Manutenção</option>
-                    <option value="salarios">Salários</option>
-                    <option value="outros">Outros</option>
-                  </select>
-                </div>
-                <Button onClick={() => create.mutate()} className="w-full" disabled={!form.descricao || !form.valor}>Criar</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        }
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <StatCard title="Saldo" value={fmt(saldo)} icon={<DollarSign className="h-5 w-5" />} variant={saldo >= 0 ? 'success' : 'destructive'} />
-        <StatCard title="Receitas" value={fmt(receitas)} icon={<TrendingUp className="h-5 w-5" />} variant="success" />
-        <StatCard title="Despesas" value={fmt(despesas)} icon={<TrendingDown className="h-5 w-5" />} variant="warning" />
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-      ) : (
-        <div className="grid gap-3">
-          {lancamentos.map(l => (
-            <div key={l.id} className="glass-card p-4 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">{l.descricao}</p>
-                <p className="text-xs text-muted-foreground">{l.categoria} • {new Date(l.created_at).toLocaleDateString('pt-BR')}</p>
-              </div>
-              <span className={`font-mono font-semibold ${l.tipo === 'receita' ? 'text-success' : 'text-destructive'}`}>
-                {l.tipo === 'receita' ? '+' : '-'}{fmt(Number(l.valor))}
-              </span>
-            </div>
-          ))}
-          {lancamentos.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhum lançamento.</p>}
+      <PageTransition className="space-y-10 max-w-7xl mx-auto w-full">
+        <div>
+          <h1 className="text-4xl font-bold text-primary tracking-tight mb-2">Financeiro</h1>
+          <p className="text-muted-foreground text-sm">Visão geral do fluxo de caixa.</p>
         </div>
-      )}
+
+        {isLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <KpiCard title="Receitas" value={receitas} prefix="R$ " icon={<Wallet size={20} />} />
+              <KpiCard title="Despesas" value={despesas} prefix="R$ " icon={<TrendingDown size={20} />} />
+              <KpiCard title="Inadimplentes" value={inadimplentes} suffix=" und" icon={<AlertTriangle size={20} />} />
+              <KpiCard title="Saldo" value={saldo} prefix="R$ " icon={<PiggyBank size={20} />} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="neo-inset rounded-3xl p-8 flex flex-col items-center justify-center relative min-h-[400px]"
+              >
+                <h3 className="absolute top-8 left-8 text-lg font-bold text-primary">Indicadores</h3>
+                <ConcentricRings data={ringData} size={280} />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="lg:col-span-2 neo-raised rounded-3xl p-8 min-h-[400px] flex flex-col"
+              >
+                <h3 className="text-lg font-bold text-primary mb-6">Lançamentos Recentes</h3>
+                <div className="flex-1 overflow-y-auto space-y-3">
+                  {lancamentos?.slice(0, 10).map(l => (
+                    <div key={l.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-card/50">
+                      <div>
+                        <p className="font-semibold text-primary text-sm">{l.descricao}</p>
+                        <p className="text-xs text-muted-foreground">{l.categoria} • {l.status}</p>
+                      </div>
+                      <span className={`font-bold text-sm ${l.tipo === 'receita' ? 'text-green-600' : 'text-red-500'}`}>
+                        {l.tipo === 'receita' ? '+' : '-'}R$ {l.valor.toLocaleString('pt-BR')}
+                      </span>
+                    </div>
+                  ))}
+                  {lancamentos?.length === 0 && (
+                    <p className="text-muted-foreground text-center py-8">Nenhum lançamento encontrado.</p>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </PageTransition>
     </AppLayout>
   );
 }

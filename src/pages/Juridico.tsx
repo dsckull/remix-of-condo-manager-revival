@@ -1,83 +1,94 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
-import { PageHeader } from '@/components/PageHeader';
+import { PageTransition } from '@/components/neo/PageTransition';
+import { motion } from 'framer-motion';
 import { Scale, FileText, Bell, Loader2 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 export default function Juridico() {
-  const { data: documentos = [], isLoading: loadDocs } = useQuery({
+  const { data: documentos, isLoading: loadingDocs } = useQuery({
     queryKey: ['documentos_juridicos'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('documentos_juridicos').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      const { data } = await supabase.from('documentos_juridicos').select('*').order('created_at', { ascending: false });
+      return data ?? [];
     },
   });
 
-  const { data: notificacoes = [], isLoading: loadNot } = useQuery({
+  const { data: notificacoes, isLoading: loadingNot } = useQuery({
     queryKey: ['notificacoes_juridicas'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('notificacoes_juridicas').select('*, moradores(nome, apartamento)').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      const { data } = await supabase.from('notificacoes_juridicas').select('*, moradores(nome, apartamento)').order('created_at', { ascending: false });
+      return data ?? [];
     },
   });
+
+  const isLoading = loadingDocs || loadingNot;
 
   return (
     <AppLayout>
-      <PageHeader title="Jurídico" description="Documentos e notificações jurídicas" icon={<Scale className="h-5 w-5" />} />
+      <PageTransition className="space-y-10 max-w-5xl mx-auto w-full">
+        <div>
+          <h1 className="text-4xl font-bold text-primary tracking-tight mb-2">Jurídico</h1>
+          <p className="text-muted-foreground text-sm flex items-center gap-2">
+            <Scale size={16} className="text-accent" />
+            Documentos e notificações jurídicas.
+          </p>
+        </div>
 
-      <Tabs defaultValue="documentos">
-        <TabsList className="bg-secondary mb-4">
-          <TabsTrigger value="documentos"><FileText className="h-4 w-4 mr-1" /> Documentos</TabsTrigger>
-          <TabsTrigger value="notificacoes"><Bell className="h-4 w-4 mr-1" /> Notificações</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="documentos">
-          {loadDocs ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-          ) : (
-            <div className="grid gap-3">
-              {documentos.map(d => (
-                <div key={d.id} className="glass-card p-4">
-                  <div className="flex items-start justify-between">
+        {isLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              className="neo-raised rounded-3xl p-8 flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <FileText size={20} className="text-accent" />
+                <h3 className="text-lg font-bold text-primary">Documentos</h3>
+              </div>
+              <div className="space-y-4 flex-1 overflow-y-auto">
+                {documentos?.map(d => (
+                  <div key={d.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-card/50 border-b border-border/30 last:border-0">
                     <div>
-                      <p className="font-medium text-foreground">{d.titulo}</p>
-                      {d.descricao && <p className="text-sm text-muted-foreground mt-1">{d.descricao}</p>}
+                      <p className="font-semibold text-primary text-sm">{d.titulo}</p>
+                      <p className="text-xs text-muted-foreground">{d.tipo} • {d.status}</p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${d.status === 'vigente' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>{d.status}</span>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {d.data_documento ? new Date(d.data_documento).toLocaleDateString('pt-BR') : '—'}
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">{d.tipo} {d.validade ? `• Validade: ${d.validade}` : ''}</p>
-                </div>
-              ))}
-              {documentos.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhum documento.</p>}
-            </div>
-          )}
-        </TabsContent>
+                ))}
+                {documentos?.length === 0 && <p className="text-muted-foreground text-center py-8">Nenhum documento.</p>}
+              </div>
+            </motion.div>
 
-        <TabsContent value="notificacoes">
-          {loadNot ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-          ) : (
-            <div className="grid gap-3">
-              {notificacoes.map(n => (
-                <div key={n.id} className="glass-card p-4">
-                  <div className="flex items-start justify-between">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="neo-inset rounded-3xl p-8 flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <Bell size={20} className="text-accent" />
+                <h3 className="text-lg font-bold text-primary">Notificações</h3>
+              </div>
+              <div className="space-y-4 flex-1 overflow-y-auto">
+                {notificacoes?.map(n => (
+                  <div key={n.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-background/50 border-b border-border/30 last:border-0">
                     <div>
-                      <p className="font-medium text-foreground">{n.titulo}</p>
-                      <p className="text-sm text-muted-foreground">{(n.moradores as any)?.nome} — Apt {(n.moradores as any)?.apartamento}</p>
+                      <p className="font-semibold text-primary text-sm">{n.titulo}</p>
+                      <p className="text-xs text-muted-foreground">{(n.moradores as any)?.nome} • Apt {(n.moradores as any)?.apartamento}</p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${n.status === 'enviada' ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>{n.status}</span>
+                    <span className={cn(
+                      "neo-inset-sm px-2 py-1 rounded-full text-xs font-medium",
+                      n.status === 'pendente' ? 'text-amber-600' : 'text-green-600'
+                    )}>
+                      {n.status}
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">{n.tipo} • {new Date(n.data_envio).toLocaleDateString('pt-BR')}</p>
-                </div>
-              ))}
-              {notificacoes.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhuma notificação.</p>}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                ))}
+                {notificacoes?.length === 0 && <p className="text-muted-foreground text-center py-8">Nenhuma notificação.</p>}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </PageTransition>
     </AppLayout>
   );
 }
