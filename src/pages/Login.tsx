@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Shield, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { NeoDisc } from '@/components/neo/NeoDisc';
+import { motion } from 'framer-motion';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -27,46 +27,63 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm glass-card neo-shadow p-8">
-        <div className="flex flex-col items-center mb-8">
-          <div className="p-3 rounded-xl bg-primary/10 glow-blue mb-4">
-            <Shield className="h-10 w-10 text-primary" />
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-sm"
+      >
+        <div className="neo-raised rounded-3xl p-10">
+          <div className="flex flex-col items-center mb-10">
+            <NeoDisc size="xl" className="mb-6">
+              <Shield className="h-10 w-10 text-accent" />
+            </NeoDisc>
+            <h1 className="text-3xl font-bold tracking-tighter text-primary">CONSERJE</h1>
+            <p className="text-sm text-muted-foreground mt-2 tracking-widest uppercase">Gestão Condominial</p>
           </div>
-          <h1 className="text-2xl font-heading font-bold tracking-widest text-foreground">CONSERJE</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sistema de Gestão Condominial</p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="neo-inset rounded-2xl px-4 py-3">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="bg-transparent border-none outline-none text-sm w-full text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+            <div className="neo-inset rounded-2xl px-4 py-3">
+              <input
+                type="password"
+                placeholder="Senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="bg-transparent border-none outline-none text-sm w-full text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+            <motion.button
+              type="submit"
+              disabled={loading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full neo-raised rounded-full py-3 font-bold text-primary flex items-center justify-center gap-2 hover:glow-gold transition-all disabled:opacity-50"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSignUp ? 'Criar Conta' : 'Entrar'}
+            </motion.button>
+          </form>
+
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="w-full text-center text-sm text-muted-foreground hover:text-accent mt-6 transition-colors"
+          >
+            {isSignUp ? 'Já tem conta? Entrar' : 'Criar nova conta'}
+          </button>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="bg-secondary border-border"
-          />
-          <Input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="bg-secondary border-border"
-          />
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {isSignUp ? 'Criar Conta' : 'Entrar'}
-          </Button>
-        </form>
-
-        <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="w-full text-center text-sm text-muted-foreground hover:text-primary mt-4 transition-colors"
-        >
-          {isSignUp ? 'Já tem conta? Entrar' : 'Criar nova conta'}
-        </button>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -6,50 +6,24 @@
 
 /* ─────────────────────────────────────────────────────────────
    CONSERJE — NEOMORPHIC DESIGN SYSTEM
-   Base: cool blue-gray #e8eaef  |  Accent: gold #b8860b  |  Primary: deep navy #1a1c2e
+   Inspired by: embossed surfaces, depth-through-shadow, no color noise
+   Base: cold blue-gray #e8eaef  |  Accent: gold #b8860b  |  Primary: deep navy #1a1c2e
 ───────────────────────────────────────────────────────────────*/
 
 @layer base {
   :root {
+    /* ── Core palette ────────────────────────────────────── */
     --background:             220 20% 92%;
     --foreground:             225 30% 16%;
     --border:                 220 16% 84%;
     --input:                  220 16% 80%;
     --ring:                   38 65% 48%;
 
+    /* ── Card / Surface ──────────────────────────────────── */
     --card:                   220 22% 96%;
     --card-foreground:        225 30% 16%;
 
-    --popover:                220 22% 97%;
-    --popover-foreground:     225 30% 16%;
-
-    --primary:                225 38% 14%;
-    --primary-foreground:     0 0% 100%;
-
-    --secondary:              220 20% 89%;
-    --secondary-foreground:   225 30% 22%;
-
-    --muted:                  220 16% 87%;
-    --muted-foreground:       220 12% 52%;
-
-    --accent:                 38 65% 48%;
-    --accent-foreground:      0 0% 100%;
-
-    --destructive:            0 68% 52%;
-    --destructive-foreground: 0 0% 100%;
-
-    --success:                142 76% 36%;
-    --success-foreground:     0 0% 100%;
-
-    --warning:                38 92% 50%;
-    --warning-foreground:     0 0% 0%;
-
-    --chart-1:                38 65% 48%;
-    --chart-2:                225 38% 35%;
-    --chart-3:                200 55% 55%;
-    --chart-4:                160 45% 50%;
-    --chart-5:                280 40% 55%;
-
+    /* ── Sidebar ─────────────────────────────────────────── */
     --sidebar-background:     220 20% 94%;
     --sidebar-foreground:     225 30% 16%;
     --sidebar-border:         220 16% 86%;
@@ -58,6 +32,43 @@
     --sidebar-accent:         220 20% 89%;
     --sidebar-accent-foreground: 225 30% 16%;
     --sidebar-ring:           38 65% 48%;
+
+    /* ── Popover ─────────────────────────────────────────── */
+    --popover:                220 22% 97%;
+    --popover-foreground:     225 30% 16%;
+
+    /* ── Primary (deep navy) ─────────────────────────────── */
+    --primary:                225 38% 14%;
+    --primary-foreground:     0 0% 100%;
+
+    /* ── Secondary ───────────────────────────────────────── */
+    --secondary:              220 20% 89%;
+    --secondary-foreground:   225 30% 22%;
+
+    /* ── Muted ───────────────────────────────────────────── */
+    --muted:                  220 16% 87%;
+    --muted-foreground:       220 12% 52%;
+
+    /* ── Accent (gold) ───────────────────────────────────── */
+    --accent:                 38 65% 48%;
+    --accent-foreground:      0 0% 100%;
+
+    /* ── Destructive ─────────────────────────────────────── */
+    --destructive:            0 68% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* ── Success / Warning ─────────────────────────────── */
+    --success:                142 76% 36%;
+    --success-foreground:     0 0% 100%;
+    --warning:                38 92% 50%;
+    --warning-foreground:     0 0% 0%;
+
+    /* ── Charts ──────────────────────────────────────────── */
+    --chart-1:                38 65% 48%;
+    --chart-2:                225 38% 35%;
+    --chart-3:                200 55% 55%;
+    --chart-4:                160 45% 50%;
+    --chart-5:                280 40% 55%;
 
     --radius: 0.75rem;
 
@@ -89,13 +100,19 @@
 
 /* ─── Neomorphic utility classes ──────────────────────── */
 @layer utilities {
+  /* Raised surface — floats above the background */
   .neo-raised    { box-shadow: var(--neo-raised); }
   .neo-raised-lg { box-shadow: var(--neo-raised-lg); }
+
+  /* Pressed/inset surface — pushed into the background */
   .neo-inset     { box-shadow: var(--neo-inset); }
   .neo-inset-sm  { box-shadow: var(--neo-inset-sm); }
   .neo-pressed   { box-shadow: var(--neo-pressed); }
+
+  /* Floating card — classic raised card with more lift */
   .neo-float     { box-shadow: var(--neo-float); }
 
+  /* Pill / disc shape helper */
   .neo-disc {
     background-color: hsl(var(--card));
     box-shadow: var(--neo-raised);
@@ -108,8 +125,10 @@
     border-radius: var(--radius);
   }
 
+  /* Active/pressed state for interactive neo elements */
   .neo-active:active { box-shadow: var(--neo-pressed); transform: scale(0.98); }
 
+  /* Embossed text effect (like "We Look Deeper" ref) */
   .text-emboss {
     color: transparent;
     background: linear-gradient(145deg, hsl(var(--foreground)) 0%, hsl(var(--muted-foreground)) 100%);
@@ -118,16 +137,25 @@
     text-shadow: 2px 2px 4px var(--neo-shadow-light), -1px -1px 2px var(--neo-shadow-dark);
   }
 
+  /* Gold accent glow */
   .glow-gold {
     box-shadow: 0 0 20px rgba(184, 134, 11, 0.3), 0 0 40px rgba(184, 134, 11, 0.15);
   }
 
+  /* Hexagon clip-path */
   .clip-hex {
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   }
+
+  /* Concentric ring base */
+  .ring-neo {
+    border-radius: 9999px;
+    background: hsl(var(--card));
+    box-shadow: var(--neo-raised);
+  }
 }
 
-/* Custom scrollbar */
+/* ─── Smooth scrollbar ────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: hsl(var(--background)); }
 ::-webkit-scrollbar-thumb { background: hsl(var(--muted)); border-radius: 9999px; }
