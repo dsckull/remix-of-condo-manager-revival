@@ -61,7 +61,7 @@ function AppRoutes() {
       <Route path="/juridico" element={<AuthGuard><Juridico /></AuthGuard>} />
       <Route path="/defcom" element={<AuthGuard><DefCom /></AuthGuard>} />
       <Route path="/votacao" element={<AuthGuard><Votacao /></AuthGuard>} />
-      <Route path="*" element={<NotFound />} />
+      <Route path="*" element={<Landing />} />
     </Routes>
   );
 }
