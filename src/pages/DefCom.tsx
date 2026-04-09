@@ -23,7 +23,7 @@ export default function DefCom() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const update: Record<string, unknown> = { status };
+      const update: { status: string; data_resolucao?: string } = { status };
       if (status === 'resolvido') update.data_resolucao = new Date().toISOString();
       const { error } = await supabase.from('alertas_defcom').update(update).eq('id', id);
       if (error) throw error;
