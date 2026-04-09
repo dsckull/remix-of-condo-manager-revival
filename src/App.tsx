@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { AiAssistantFab } from "@/components/AiAssistantFab";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import Moradores from "./pages/Moradores";
@@ -15,6 +17,7 @@ import Assembleias from "./pages/Assembleias";
 import Reservas from "./pages/Reservas";
 import Juridico from "./pages/Juridico";
 import DefCom from "./pages/DefCom";
+import Votacao from "./pages/Votacao";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -28,7 +31,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     </div>
   );
   if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
+  return <>
+    {children}
+    <AiAssistantFab />
+  </>;
 }
 
 function AppRoutes() {
@@ -42,6 +48,7 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/landing" element={user ? <Navigate to="/" replace /> : <Landing />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
       <Route path="/moradores" element={<AuthGuard><Moradores /></AuthGuard>} />
@@ -53,6 +60,7 @@ function AppRoutes() {
       <Route path="/reservas" element={<AuthGuard><Reservas /></AuthGuard>} />
       <Route path="/juridico" element={<AuthGuard><Juridico /></AuthGuard>} />
       <Route path="/defcom" element={<AuthGuard><DefCom /></AuthGuard>} />
+      <Route path="/votacao" element={<AuthGuard><Votacao /></AuthGuard>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
