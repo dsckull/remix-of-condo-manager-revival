@@ -24,6 +24,7 @@ export function NeoSidebar() {
     { href: "/reservas", icon: CalendarDays, label: "Reservas" },
     { href: "/juridico", icon: ShieldAlert, label: "Jurídico" },
     { href: "/defcom", icon: ShieldAlert, label: "DefCom" },
+    { href: "/votacao", icon: Vote, label: "Votação" },
   ];
 
   return (
