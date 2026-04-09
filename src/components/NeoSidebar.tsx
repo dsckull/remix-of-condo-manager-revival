@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, Users, CalendarDays, TrendingUp,
-  MessageCircle, AlertTriangle, Gavel, ShieldAlert, Settings, LogOut
+  AlertTriangle, Gavel, ShieldAlert, Vote, LogOut
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ export function NeoSidebar() {
     { href: "/reservas", icon: CalendarDays, label: "Reservas" },
     { href: "/juridico", icon: ShieldAlert, label: "Jurídico" },
     { href: "/defcom", icon: ShieldAlert, label: "DefCom" },
+    { href: "/votacao", icon: Vote, label: "Votação" },
   ];
 
   return (
