@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { lovable } from '@/integrations/lovable/index';
+import { supabase } from '@/integrations/supabase/client';
 import { Shield, Loader2, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NeoDisc } from '@/components/neo/NeoDisc';
@@ -36,15 +36,14 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin },
       });
-      if (result.error) {
-        toast({ title: 'Erro', description: String(result.error), variant: 'destructive' });
+      if (error) {
+        toast({ title: 'Erro', description: error.message, variant: 'destructive' });
         setGoogleLoading(false);
       }
-      if (result.redirected) return;
-      setGoogleLoading(false);
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
       setGoogleLoading(false);
