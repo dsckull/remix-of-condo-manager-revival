@@ -28,17 +28,19 @@ src/
 
 ## Key Features / Pages
 
-- **Dashboard** (`/`) - KPI cards and operational flow charts
-- **Moradores** (`/moradores`) - Resident management
-- **Encomendas** (`/encomendas`) - Package/delivery management
-- **Visitantes** (`/visitantes`) - Visitor access control
-- **Ocorrências** (`/ocorrencias`) - Incident reports
-- **Financeiro** (`/financeiro`) - Financial management
-- **Assembleias** (`/assembleias`) - Assembly meetings
-- **Reservas** (`/reservas`) - Common area reservations
-- **Jurídico** (`/juridico`) - Legal documents
-- **DefCom** (`/defcom`) - Security alerts
-- **Votação** (`/votacao`) - Voting/polls
+All pages below have full read + write (CRUD) support:
+
+- **Dashboard** (`/`) - KPI cards + real operational flow chart (visitantes + encomendas últimos 7 dias)
+- **Moradores** (`/moradores`) - Cadastro de moradores (listar + cadastrar novo)
+- **Encomendas** (`/encomendas`) - Gestão de pacotes (listar, registrar nova, atualizar status: notificado → retirado)
+- **Visitantes** (`/visitantes`) - Controle de acesso (registrar entrada com modal, registrar saída inline)
+- **Ocorrências** (`/ocorrencias`) - Registro e acompanhamento (criar, atualizar status: em_andamento → fechada)
+- **Financeiro** (`/financeiro`) - Fluxo de caixa (KPIs, lista de lançamentos, registrar novos)
+- **Assembleias** (`/assembleias`) - Assembleias (agendar, marcar realizada)
+- **Reservas** (`/reservas`) - Calendário semanal de áreas comuns (leitura)
+- **Jurídico** (`/juridico`) - Documentos + notificações jurídicas (leitura)
+- **DefCom** (`/defcom`) - Alertas de segurança (leitura + resolver/arquivar, polling 15s)
+- **Votação** (`/votacao`) - CRUD completo via `votacoes_sindicancia` (criar, abrir, encerrar, excluir)
 
 ## Authentication
 

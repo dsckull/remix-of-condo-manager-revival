@@ -5,25 +5,19 @@ import { PageTransition } from '@/components/neo/PageTransition';
 import { KpiCard } from '@/components/neo/KpiCard';
 import { NeoPill } from '@/components/neo/NeoPill';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
+import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { Package, Users, Activity, Banknote, Loader2 } from 'lucide-react';
 
-const chartData = [
-  { name: "Seg", acessos: 120, encomendas: 45 },
-  { name: "Ter", acessos: 132, encomendas: 52 },
-  { name: "Qua", acessos: 101, encomendas: 38 },
-  { name: "Qui", acessos: 145, encomendas: 65 },
-  { name: "Sex", acessos: 180, encomendas: 80 },
-  { name: "Sáb", acessos: 220, encomendas: 40 },
-  { name: "Dom", acessos: 200, encomendas: 25 },
-];
+const dayName = (date: Date) =>
+  format(date, 'EEE', { locale: ptBR }).replace('.', '').charAt(0).toUpperCase() +
+  format(date, 'EEE', { locale: ptBR }).replace('.', '').slice(1, 3);
 
 function DashboardContent() {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const [moradores, encPend, visitDentro, ocorAbertas] = await Promise.all([
@@ -42,7 +36,33 @@ function DashboardContent() {
     refetchInterval: 30000,
   });
 
+  const { data: chartData, isLoading: chartLoading } = useQuery({
+    queryKey: ['dashboard-chart'],
+    queryFn: async () => {
+      const since = subDays(startOfDay(new Date()), 6).toISOString();
+      const [visQuery, encQuery] = await Promise.all([
+        supabase.from('visitantes').select('data_entrada').gte('data_entrada', since),
+        supabase.from('encomendas').select('data_recebimento').gte('data_recebimento', since),
+      ]);
+
+      const days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), 6 - i));
+
+      return days.map(day => {
+        const dayStr = format(day, 'yyyy-MM-dd');
+        const acessos = (visQuery.data ?? []).filter(v =>
+          format(new Date(v.data_entrada), 'yyyy-MM-dd') === dayStr
+        ).length;
+        const encomendas = (encQuery.data ?? []).filter(e =>
+          format(new Date(e.data_recebimento), 'yyyy-MM-dd') === dayStr
+        ).length;
+        return { name: dayName(day), acessos, encomendas };
+      });
+    },
+    refetchInterval: 60000,
+  });
+
   const today = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
+  const isLoading = statsLoading || chartLoading;
 
   if (isLoading) {
     return (
@@ -82,7 +102,8 @@ function DashboardContent() {
           transition={{ delay: 0.2 }}
           className="lg:col-span-2 neo-raised rounded-3xl p-8 h-[400px] flex flex-col"
         >
-          <h3 className="text-lg font-bold text-primary mb-6">Fluxo Operacional (7 dias)</h3>
+          <h3 className="text-lg font-bold text-primary mb-1">Fluxo Operacional (7 dias)</h3>
+          <p className="text-xs text-muted-foreground mb-6">Visitantes e encomendas por dia</p>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -97,11 +118,12 @@ function DashboardContent() {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: 'none', boxShadow: 'var(--neo-float)' }} />
-                <Area type="monotone" dataKey="acessos" stroke="hsl(var(--chart-2))" fillOpacity={1} fill="url(#colorAcessos)" strokeWidth={3} />
-                <Area type="monotone" dataKey="encomendas" stroke="hsl(var(--chart-1))" fillOpacity={1} fill="url(#colorEnco)" strokeWidth={3} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: 'none', boxShadow: 'var(--neo-float)' }}
+                  labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }} />
+                <Area type="monotone" dataKey="acessos" name="Visitantes" stroke="hsl(var(--chart-2))" fillOpacity={1} fill="url(#colorAcessos)" strokeWidth={3} />
+                <Area type="monotone" dataKey="encomendas" name="Encomendas" stroke="hsl(var(--chart-1))" fillOpacity={1} fill="url(#colorEnco)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -125,6 +147,7 @@ function DashboardContent() {
               { label: "Reservas", status: "online" },
               { label: "DefCom", status: "online" },
               { label: "Jurídico", status: "online" },
+              { label: "Votação", status: "online" },
             ].map((mod) => (
               <div key={mod.label} className="flex items-center justify-between py-2">
                 <span className="text-sm font-medium text-foreground">{mod.label}</span>
