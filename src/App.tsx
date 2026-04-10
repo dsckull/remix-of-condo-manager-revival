@@ -19,6 +19,7 @@ import Juridico from "./pages/Juridico";
 import DefCom from "./pages/DefCom";
 import Votacao from "./pages/Votacao";
 import NotFound from "./pages/NotFound";
+import AuthCallback from "./pages/AuthCallback";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/landing" element={user ? <Navigate to="/" replace /> : <Landing />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
