@@ -47,7 +47,7 @@ export default function Visitantes() {
       setShowModal(false);
       setForm(empty);
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const registerExit = useMutation({
@@ -62,7 +62,7 @@ export default function Visitantes() {
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast({ title: 'Saída registrada!' });
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const filtered = visitantes?.filter(v =>

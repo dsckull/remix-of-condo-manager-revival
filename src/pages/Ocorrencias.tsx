@@ -55,12 +55,12 @@ export default function Ocorrencias() {
       setShowModal(false);
       setForm(empty);
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const update: Record<string, string | null> = { status };
+      const update: { status: string; data_fechamento?: string } = { status };
       if (status === 'fechada') update.data_fechamento = new Date().toISOString();
       const { error } = await supabase.from('ocorrencias').update(update).eq('id', id);
       if (error) throw error;
@@ -70,7 +70,7 @@ export default function Ocorrencias() {
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast({ title: 'Status atualizado!' });
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const filtered = ocorrencias?.filter(o =>

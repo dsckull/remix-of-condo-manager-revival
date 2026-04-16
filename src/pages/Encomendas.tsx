@@ -39,7 +39,7 @@ export default function Encomendas() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const update: Record<string, string> = { status };
+      const update: { status: string; data_retirada?: string } = { status };
       if (status === 'retirado') update.data_retirada = new Date().toISOString();
       const { error } = await supabase.from('encomendas').update(update).eq('id', id);
       if (error) throw error;
@@ -49,7 +49,7 @@ export default function Encomendas() {
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
       toast({ title: 'Status atualizado!' });
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const createEncomenda = useMutation({
@@ -71,7 +71,7 @@ export default function Encomendas() {
       setShowModal(false);
       setForm(empty);
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const getStatusIcon = (status: string) => {
