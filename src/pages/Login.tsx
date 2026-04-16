@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import { Shield, Loader2, Mail, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NeoDisc } from '@/components/neo/NeoDisc';
@@ -52,15 +52,17 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: callbackUrl },
+    const result = await lovable.auth.signInWithOAuth('google', {
+      redirect_uri: window.location.origin,
     });
-    if (error) {
-      toast({ title: 'Erro Google', description: error.message, variant: 'destructive' });
+    if (result.error) {
+      toast({ title: 'Erro Google', description: 'Não foi possível conectar com o Google.', variant: 'destructive' });
       setGoogleLoading(false);
+      return;
     }
-    // If no error, browser will redirect — no need to setGoogleLoading(false)
+    if (result.redirected) return; // browser is redirecting
+    // tokens received & session set — go to dashboard
+    window.location.href = '/';
   };
 
   if (emailSent) {
