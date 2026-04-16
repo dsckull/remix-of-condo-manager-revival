@@ -72,12 +72,12 @@ export default function Votacao() {
       setShowModal(false);
       setForm(empty);
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const update: Record<string, string | null> = { status };
+      const update: { status: string; data_inicio?: string; data_fim?: string } = { status };
       if (status === 'aberta' && !votacoes?.find(v => v.id === id)?.data_inicio) {
         update.data_inicio = new Date().toISOString();
       }
@@ -89,7 +89,7 @@ export default function Votacao() {
       qc.invalidateQueries({ queryKey: ['votacoes_sindicancia'] });
       toast({ title: 'Status atualizado!' });
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const deleteVotacao = useMutation({
@@ -101,7 +101,7 @@ export default function Votacao() {
       qc.invalidateQueries({ queryKey: ['votacoes_sindicancia'] });
       toast({ title: 'Votação removida.' });
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const abertas = votacoes?.filter(v => v.status === 'aberta') ?? [];

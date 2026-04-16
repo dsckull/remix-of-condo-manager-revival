@@ -43,7 +43,7 @@ export default function Financeiro() {
       setShowModal(false);
       setForm(empty);
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const receitas = lancamentos?.filter(l => l.tipo === 'receita').reduce((s, l) => s + Number(l.valor), 0) ?? 0;

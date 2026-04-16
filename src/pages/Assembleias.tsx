@@ -41,7 +41,7 @@ export default function Assembleias() {
       setShowModal(false);
       setForm(empty);
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   const updateStatus = useMutation({
@@ -53,7 +53,7 @@ export default function Assembleias() {
       qc.invalidateQueries({ queryKey: ['assembleias'] });
       toast({ title: 'Status atualizado!' });
     },
-    onError: (err: any) => toast({ title: 'Erro', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro', description: 'Operação não permitida. Tente novamente.', variant: 'destructive' }); },
   });
 
   return (

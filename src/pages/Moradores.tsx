@@ -44,7 +44,7 @@ export default function Moradores() {
       setShowModal(false);
       setForm(empty);
     },
-    onError: (err: any) => toast({ title: 'Erro ao cadastrar', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => { console.error(err); toast({ title: 'Erro ao cadastrar', description: 'Não foi possível concluir o cadastro.', variant: 'destructive' }); },
   });
 
   const filtered = moradores?.filter(m =>
