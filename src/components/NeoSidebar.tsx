@@ -1,17 +1,15 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, Users, CalendarDays, TrendingUp,
-  AlertTriangle, Gavel, ShieldAlert, Vote, LogOut
+  AlertTriangle, Gavel, ShieldAlert, Vote
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NeoDisc } from "./neo/NeoDisc";
-import { useAuth } from "@/hooks/useAuth";
 
 export function NeoSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
 
   const links = [
     { href: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -57,17 +55,6 @@ export function NeoSidebar() {
         })}
       </div>
 
-      <div className="flex flex-col gap-4 items-center mt-auto">
-        <motion.div
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={signOut}
-          className="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer text-muted-foreground hover:text-destructive"
-          title="Sair"
-        >
-          <LogOut size={20} strokeWidth={1.5} />
-        </motion.div>
-      </div>
     </div>
   );
 }

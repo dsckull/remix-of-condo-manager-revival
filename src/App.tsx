@@ -24,14 +24,7 @@ import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    </div>
-  );
-  if (!user) return <Navigate to="/login" replace />;
+function PublicShell({ children }: { children: React.ReactNode }) {
   return <>
     {children}
     <AiAssistantFab />
@@ -39,31 +32,23 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
-
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    </div>
-  );
-
   return (
     <Routes>
       <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/landing" element={user ? <Navigate to="/" replace /> : <Landing />} />
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
-      <Route path="/moradores" element={<AuthGuard><Moradores /></AuthGuard>} />
-      <Route path="/encomendas" element={<AuthGuard><Encomendas /></AuthGuard>} />
-      <Route path="/visitantes" element={<AuthGuard><Visitantes /></AuthGuard>} />
-      <Route path="/ocorrencias" element={<AuthGuard><Ocorrencias /></AuthGuard>} />
-      <Route path="/financeiro" element={<AuthGuard><Financeiro /></AuthGuard>} />
-      <Route path="/assembleias" element={<AuthGuard><Assembleias /></AuthGuard>} />
-      <Route path="/reservas" element={<AuthGuard><Reservas /></AuthGuard>} />
-      <Route path="/juridico" element={<AuthGuard><Juridico /></AuthGuard>} />
-      <Route path="/defcom" element={<AuthGuard><DefCom /></AuthGuard>} />
-      <Route path="/votacao" element={<AuthGuard><Votacao /></AuthGuard>} />
-      <Route path="*" element={<Landing />} />
+      <Route path="/landing" element={<Landing />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/" element={<PublicShell><Index /></PublicShell>} />
+      <Route path="/moradores" element={<PublicShell><Moradores /></PublicShell>} />
+      <Route path="/encomendas" element={<PublicShell><Encomendas /></PublicShell>} />
+      <Route path="/visitantes" element={<PublicShell><Visitantes /></PublicShell>} />
+      <Route path="/ocorrencias" element={<PublicShell><Ocorrencias /></PublicShell>} />
+      <Route path="/financeiro" element={<PublicShell><Financeiro /></PublicShell>} />
+      <Route path="/assembleias" element={<PublicShell><Assembleias /></PublicShell>} />
+      <Route path="/reservas" element={<PublicShell><Reservas /></PublicShell>} />
+      <Route path="/juridico" element={<PublicShell><Juridico /></PublicShell>} />
+      <Route path="/defcom" element={<PublicShell><DefCom /></PublicShell>} />
+      <Route path="/votacao" element={<PublicShell><Votacao /></PublicShell>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
