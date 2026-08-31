@@ -315,6 +315,48 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          cargo: string | null
+          condominio: string | null
+          created_at: string
+          email: string
+          id: string
+          mensagem: string | null
+          nome: string
+          origem: string | null
+          plano_interesse: string | null
+          telefone: string | null
+          unidades: number | null
+        }
+        Insert: {
+          cargo?: string | null
+          condominio?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          mensagem?: string | null
+          nome: string
+          origem?: string | null
+          plano_interesse?: string | null
+          telefone?: string | null
+          unidades?: number | null
+        }
+        Update: {
+          cargo?: string | null
+          condominio?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          mensagem?: string | null
+          nome?: string
+          origem?: string | null
+          plano_interesse?: string | null
+          telefone?: string | null
+          unidades?: number | null
+        }
+        Relationships: []
+      }
       logs_interacao: {
         Row: {
           canal: string | null
