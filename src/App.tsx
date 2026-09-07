@@ -37,6 +37,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/landing" element={<Landing />} />
+      <Route path="/reservar" element={<Reservar />} />
+      <Route path="/pre-venda" element={<Navigate to="/reservar" replace />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/" element={<PublicShell><Index /></PublicShell>} />
       <Route path="/moradores" element={<PublicShell><Moradores /></PublicShell>} />
