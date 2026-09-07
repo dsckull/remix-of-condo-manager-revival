@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AiAssistantFab } from "@/components/AiAssistantFab";
 import Landing from "./pages/Landing";
+import Reservar from "./pages/Reservar";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import Moradores from "./pages/Moradores";
@@ -36,6 +37,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/landing" element={<Landing />} />
+      <Route path="/reservar" element={<Reservar />} />
+      <Route path="/pre-venda" element={<Navigate to="/reservar" replace />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/" element={<PublicShell><Index /></PublicShell>} />
       <Route path="/moradores" element={<PublicShell><Moradores /></PublicShell>} />
