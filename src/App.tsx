@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AiAssistantFab } from "@/components/AiAssistantFab";
 import Landing from "./pages/Landing";
+import Reservar from "./pages/Reservar";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import Moradores from "./pages/Moradores";
